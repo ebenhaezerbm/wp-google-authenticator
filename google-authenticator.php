@@ -185,7 +185,7 @@ function login_script() {
  */
 function loginform() {
 	// unset($_SESSION["google_authenticator_pre_login_id"]);
-	if (isset($_SESSION["google_authenticator_pre_login_id"]) && FALSE !== get_userdata( $_SESSION["google_authenticator_pre_login_id"] ) && isset($_POST['log']) && isset($_POST['pwd']) ) {
+	if (isset($_SESSION["google_authenticator_pre_login_id"]) && FALSE !== get_userdata( $_SESSION["google_authenticator_pre_login_id"] ) && !empty($_POST['log']) && !empty($_POST['pwd']) ) {
 		$user_id = $_SESSION["google_authenticator_pre_login_id"];
 		$GA_secret = trim( get_user_option( 'googleauthenticator_secret', $user_id ) );
 		if ('' == $GA_secret) {
