@@ -43,11 +43,6 @@ Domain Path: /lang
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-add_action( 'login_form', 'remove_connect_by_fb_button', 9 );
-function remove_connect_by_fb_button() {
-	remove_action( 'login_form', 'new_add_fb_login_form' );
-}
-
 class GoogleAuthenticator {
 
 static $instance; // to store a reference to the plugin, allows other plugins to remove actions
