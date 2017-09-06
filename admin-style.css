@@ -1,0 +1,13 @@
+.QR_CODE_BOX {
+    max-width: 300px;
+    width: 100%;
+    font-size: 13px;
+}
+.QR_CODE_BOX .auth_message {
+    margin-left: 15px;
+}
+
+.btn-ga-action.inline {
+	margin-left:20px;
+	margin-top:-6px;
+}
