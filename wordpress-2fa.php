@@ -1,11 +1,11 @@
 <?php
 /*
-Plugin Name: 2-Factor Authentication
-Plugin URI: http://henrik.schack.dk/google-authenticator-for-wordpress
+Plugin Name: Wordpress 2-FA
+Plugin URI: https://github.com/tonjoo/wordpress-2-FA
 Description: Two-Factor Authentication for WordPress using the Android/iPhone/Blackberry app as One Time Password generator.
-Author: Henrik Schack
-Version: 0.48
-Author URI: http://henrik.schack.dk/
+Author: Todi Adiyatmo
+Version: 1.0
+Author URI: http://www.todiadiyatmo.com/
 Compatibility: WordPress 4.5
 Text Domain: google-authenticator
 Domain Path: /lang
@@ -107,7 +107,7 @@ class GoogleAuthenticator {
 	 * Add settings button on plugin actions
 	 */
 	function google_authenticator_add_settings_link( $links ) {
-		$settings_link = '<a href="options-general.php?page=google-authenticator">' . __( 'Settings' ) . '</a>';
+		$settings_link = '<a href="options-general.php?page=wordpress-2fa">' . __( 'Settings' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}
@@ -320,6 +320,9 @@ class GoogleAuthenticator {
 		$forced_roles = get_option( 'google_authenticator_roles', array() );
 		if ( isset( $user->ID ) && !isset($_POST['googleotp'])) {
 			if ( 'enabled' == trim( get_user_option( 'googleauthenticator_enabled', $user->ID ) ) || !empty(array_intersect($user->roles, $forced_roles)) ) {
+				
+				remove_action( "wp_login_failed", "wp_limit_login_failed" );
+				remove_action( "login_errors", "wp_limit_login_errors" );
 				
 				$_SESSION["google_authenticator_pre_login_id"] = $user->ID;
 				
@@ -1279,16 +1282,42 @@ ENDOFJS;
 	 * Admin setting menu for enabling 2-FA per role basis
 	 */
 	function setting_menu() {
-		add_submenu_page( 'options-general.php', __('2-Factor Authentication','google-authenticator'), __('2-Factor Authentication','google-authenticator'), 'manage_options', 'google-authenticator', array( $this, 'setting_menu_callback' )  );
+		add_submenu_page( 'options-general.php', __('2-Factor Authentication','google-authenticator'), __('2-Factor Authentication','google-authenticator'), 'manage_options', 'wordpress-2fa', array( $this, 'setting_menu_callback' )  );
 	}
 
 	/**
 	 * 2-Factor Authentication Page Handler
 	 */
 	function setting_menu_callback() {
-		if ( isset($_POST['save-settings']) ) {
+		global $wpdb; 
+
+		if ( isset($_POST['save-settings']) ) { 
 			$this->update_ga_settings(); 
 		}
+
+		if ( isset($_GET['action']) && wp_verify_nonce($_GET['action'], 'force-reset-google-authenticator-secret') ) { 
+
+			$sql = $wpdb->prepare( "DELETE FROM $wpdb->usermeta WHERE meta_key=%s", array( 'googleauthenticator_secret' ) );
+			$query = $wpdb->query($sql);
+
+			if ( !is_wp_error($query) ) { 
+				$redirect_to = add_query_arg( 
+					array( 
+						'page' => 'wordpress-2fa', 
+						'force_reset_secret' => 1 
+					), 
+					admin_url('options-general.php') 
+				);
+
+				wp_redirect($redirect_to);
+				exit;
+			} else { 
+				if ( isset($_GET['wp_http_referer']) ) { 
+					wp_redirect($_GET['wp_http_referer']);
+					exit;
+				} 
+			} 
+		} 
 
 		$roles = get_editable_roles();
 		$enabled_roles = get_option( 'google_authenticator_roles', array() ); 
@@ -1331,23 +1360,27 @@ ENDOFJS;
 							</td>
 						</tr>
 						<tr>
-							<th><label for=""><?php _e( ' Relaxed Mode', 'google-authenticator' ) ?></label></th>
+							<th><label for=""><?php _e( 'Relaxed Mode', 'google-authenticator' ) ?></label></th>
 							<td>
 								<input type="checkbox" name="GA_relaxedmode" id="GA_relaxedmode" class="tog" <?php checked( $GA_relaxedmode, 'enabled', true ); ?> />
 								<span class="description"><?php _e('Relaxed mode allows for more time drifting on your phone clock (&#177;2 min)', 'google-authenticator'); ?></span>
 							</td>
 						</tr>
 						<tr>
-							<th><label for=""><?php _e( ' Master Password', 'google-authenticator' ) ?></label></th>
+							<th><label for=""><?php _e( 'Master Password', 'google-authenticator' ) ?></label></th>
 							<td>
 								<input type="checkbox" name="GA_pwdenabled" id="GA_pwdenabled" class="tog" <?php checked( $GA_pwdenabled, 'enabled', true ); ?> />
 								<span class="description"><?php _e('Enabling an App password will decrease your overall login security.', 'google-authenticator'); ?></span>
 							</td>
 						</tr>
+						<tr>
+							<th></th>
+							<td><a class="button button-danger" href="<?php echo wp_nonce_url( add_query_arg( array( 'page' => 'wordpress-2fa' ), admin_url('options-general.php') ), 'force-reset-google-authenticator-secret', 'action' ); ?>"><?php _e('Force Reset 2FA Secret', 'google-authenticator'); ?></a></td>
+						</tr>
 					</tbody>
 				</table>
 
-				<?php wp_nonce_field( 'save_roles', 'google_authenticator_action' ); ?>
+				<?php wp_nonce_field( 'google-authenticator', 'google_authenticator_save_settings' ); ?>
 				<?php submit_button( __( 'Save Changes' ), 'primary left', 'save-settings', false ); ?>
 			</form>
 		</div>
@@ -1363,10 +1396,10 @@ ENDOFJS;
 		if ( $pagenow != 'options-general.php' ) 
 			return;
 
-		if ( !isset($_GET['page']) || $_GET['page'] != 'google-authenticator' )
+		if ( !isset($_GET['page']) || 'wordpress-2fa' != $_GET['page'] ) 
 			return;
 
-		if ( !isset($_POST['google_authenticator_action']) || !wp_verify_nonce( @$_POST['google_authenticator_action'], 'save_roles' ) ) 
+		if ( !isset($_POST['google_authenticator_save_settings']) || !wp_verify_nonce( @$_POST['google_authenticator_save_settings'], 'google-authenticator' ) ) 
 			return;
 
 		$GA_roles = isset($_POST['role']) ? $_POST['role'] : array();
@@ -1388,12 +1421,19 @@ ENDOFJS;
 	function google_authenticator_sample_admin_notice() {
 		global $pagenow;
 
-		if ( !in_array($pagenow, array('profile.php','user-edit.php')) ) 
+		if ( !in_array($pagenow, array('options-general.php','profile.php','user-edit.php')) ) 
 			return;
 
-		if ( isset($_GET['reset_secret']) && $_GET['reset_secret'] == 1 ) { ?>
+		if ( isset($_GET['reset_secret']) && 1 == $_GET['reset_secret'] ) { ?>
 			<div class="notice notice-success is-dismissible">
 				<p><?php _e( 'GA secret anda berhasil di hapus.', 'google-authenticator' ); ?></p>
+			</div>
+			<?php 
+		}
+
+		if ( isset($_GET['force_reset_secret']) && 1 == $_GET['force_reset_secret'] ) { ?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php _e( 'Successfully force reset secret.', 'google-authenticator' ); ?></p>
 			</div>
 			<?php 
 		}
