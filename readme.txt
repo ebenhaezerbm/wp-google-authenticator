@@ -1,5 +1,5 @@
 === Wordpress 2-FA ===
-Contributors: Todi.Adiyatmo
+Contributors: Henrik.Schack, Todi.Adiyatmo, Ebenhaezer.BM
 
 Two Factor Authentication for your WordPress blog.
 
