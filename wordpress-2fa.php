@@ -515,7 +515,7 @@ class GoogleAuthenticator {
 		
 		echo "<h3>".__( '2-Factor Authentication Settings', 'google-authenticator' )."</h3>\n";
 
-		echo wp_nonce_field('google-authenticator', 'GA_nonce');
+		wp_nonce_field('google-authenticator', 'GA_nonce');
 
 		echo "<input type=\"hidden\" name=\"GA_label\" id=\"GA_label\" value=\"{$GA_label}\">";
 
@@ -1381,7 +1381,7 @@ ENDOFJS;
 				</table>
 
 				<?php wp_nonce_field( 'google-authenticator', 'google_authenticator_save_settings' ); ?>
-				<?php submit_button( __( 'Save Changes' ), 'primary left', 'save-settings', false ); ?>
+				<?php submit_button( __( 'Save Changes', 'google-authenticator' ), 'primary left', 'save-settings', false ); ?>
 			</form>
 		</div>
 		<?php 
