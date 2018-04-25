@@ -51,8 +51,8 @@ class GoogleAuthenticator {
 	 * Constructor, entry point of the plugin
 	 */
 	function __construct() {
-	    self::$instance = $this;
-	    add_action( 'init', array( $this, 'init' ) );
+		self::$instance = $this;
+		add_action( 'init', array( $this, 'init' ) );
 	}
 
 	/**
@@ -133,9 +133,9 @@ class GoogleAuthenticator {
 			$firstcount = -1;
 			$lastcount  =  1; 	
 		}
-		
+
 		$tm = floor( time() / 30 );
-		
+
 		$secretkey=Base32::decode($secretkey);
 		// Keys from 30 seconds before and after are valid aswell.
 		for ($i=$firstcount; $i<=$lastcount; $i++) {
@@ -233,7 +233,7 @@ class GoogleAuthenticator {
 
 		// unset($_SESSION["google_authenticator_pre_login_id"]);
 		if ( isset($_SESSION["google_authenticator_pre_login_id"]) && FALSE !== get_userdata($_SESSION["google_authenticator_pre_login_id"]) && !empty($_POST['log']) && !empty($_POST['pwd']) ) {
-			
+
 			add_filter( 'gettext', array($this, 'wpse17709_gettext'), 10, 2 );
 
 			$user_id = $_SESSION["google_authenticator_pre_login_id"];
@@ -269,7 +269,7 @@ class GoogleAuthenticator {
 			echo "\t\t<label>".__('Authorization Code','google-authenticator')."<span id=\"google-auth-info\"></span><br />\n";
 			echo "\t\t<input type=\"text\" name=\"googleotp\" id=\"user_email\" class=\"input\" value=\"\" size=\"20\" style=\"ime-mode: inactive;\" /></label>\n";
 			echo "\t</p>\n";
-			
+
 			if ( !isset($_SESSION['invalid_google_authenticator_password']) || $_SESSION['invalid_google_authenticator_password'] != 1 ) { ?>
 				<style type="text/css">
 					.login #login_error {
@@ -316,16 +316,16 @@ class GoogleAuthenticator {
 		if ( !session_id() ) {
 			session_start();
 		}
-		
+
 		$forced_roles = get_option( 'google_authenticator_roles', array() );
 		if ( isset( $user->ID ) && !isset($_POST['googleotp'])) {
 			if ( 'enabled' == trim( get_user_option( 'googleauthenticator_enabled', $user->ID ) ) || !empty(array_intersect($user->roles, $forced_roles)) ) {
-				
+
 				remove_action( "wp_login_failed", "wp_limit_login_failed" );
 				remove_action( "login_errors", "wp_limit_login_errors" );
-				
+
 				$_SESSION["google_authenticator_pre_login_id"] = $user->ID;
-				
+
 				$GA_secret = trim( get_user_option( 'googleauthenticator_secret', $user->ID ) );
 				if ( '' == $GA_secret ) {
 					$_SESSION['google_authenticator_create_new_secret'] = 1;
@@ -373,13 +373,13 @@ class GoogleAuthenticator {
 				update_user_option( $user->ID, 'googleauthenticator_secret', $_POST['ga_secret'], true );
 				$GA_secret = $_POST['ga_secret'];
 			}
-			
+
 			// Figure out if user is using relaxed mode ?
 			// $GA_relaxedmode = trim( get_user_option( 'googleauthenticator_relaxedmode', $user->ID ) );
 
 			// Figure out if relaxed mode is active ?
 			$GA_relaxedmode = trim( get_option( 'google_authenticator_relaxedmode' ) );
-			
+
 			// Get the verification code entered by the user trying to login
 			if ( !empty( $_POST['googleotp'] )) { // Prevent PHP notices when using app password login
 				$otp = trim( $_POST[ 'googleotp' ] );
@@ -423,12 +423,12 @@ class GoogleAuthenticator {
 
 						// Wrong XMLRPC/APP password !
 						return new WP_Error( 'invalid_google_authenticator_password', __( '<strong>ERROR</strong>: The App Password is incorrect.', 'google-authenticator' ) );
-					} 		 
+					}
 				} else {
 					$_SESSION['invalid_google_authenticator_password'] = 1;
 
 					return new WP_Error( 'invalid_google_authenticator_token', __( '<strong>ERROR</strong>: The Authorization Code is incorrect or has expired.', 'google-authenticator' ) );
-				}	
+				}
 			}
 		}
 
@@ -446,10 +446,10 @@ class GoogleAuthenticator {
 		$user_id = $user->ID;
 
 		if ( isset($_GET['action']) && wp_verify_nonce(@$_GET['action'], 'google_authenticator_remove_secret') ) {
-			
+
 			delete_user_option($user_id, 'googleauthenticator_secret'); // blog spesific 
 			delete_user_option($user_id, 'googleauthenticator_secret', true); // global (network wide) 
-			
+
 			if ( isset($_GET['wp_http_referer']) ) {
 				wp_redirect($_GET['wp_http_referer']);
 				exit;
@@ -469,14 +469,14 @@ class GoogleAuthenticator {
 		// If editing of 2-Factor Authentication settings has been disabled, just return
 		$GA_hidefromuser = trim( get_user_option( 'googleauthenticator_hidefromuser', $user_id ) );
 		if ( $GA_hidefromuser == 'enabled') return;
-		
+
 		$GA_secret			= trim( get_user_option( 'googleauthenticator_secret', $user_id ) );
 		$GA_enabled			= trim( get_user_option( 'googleauthenticator_enabled', $user_id ) );
 		// $GA_relaxedmode		= trim( get_user_option( 'googleauthenticator_relaxedmode', $user_id ) );
 		$GA_description		= trim( get_user_option( 'googleauthenticator_description', $user_id ) );
 		$GA_pwdenabled		= trim( get_user_option( 'googleauthenticator_pwdenabled', $user_id ) );
 		$GA_password		= trim( get_user_option( 'googleauthenticator_passwords', $user_id ) );
-		
+
 		$forced_roles = get_option( 'google_authenticator_roles', array() );
 
 		if ( array_intersect($user->roles, $forced_roles) ) {
@@ -499,7 +499,7 @@ class GoogleAuthenticator {
 		if ( '' == $GA_secret ) {
 			$GA_secret = $this->create_secret();
 		}
-		
+
 		// Use "WordPress Blog" as default description
 		if ( '' == $GA_description ) {
 			$GA_description = get_bloginfo('name');
@@ -512,7 +512,7 @@ class GoogleAuthenticator {
 		$GA_label = rawurlencode($GA_label);
 
 		$GA_relaxedmode = trim( get_option( 'google_authenticator_relaxedmode' ) );
-		
+
 		echo "<h3>".__( '2-Factor Authentication Settings', 'google-authenticator' )."</h3>\n";
 
 		wp_nonce_field('google-authenticator', 'GA_nonce');
@@ -521,7 +521,7 @@ class GoogleAuthenticator {
 
 		echo "<table class=\"form-table\">\n";
 		echo "<tbody>\n";
-		
+
 		if ( !array_intersect($user->roles, $forced_roles) ) {
 			echo "<tr>\n";
 			echo "<th>".__( 'Enable 2-FA', 'google-authenticator' )."</th>\n";
@@ -550,11 +550,11 @@ class GoogleAuthenticator {
 			echo "Active";
 
 			$url = admin_url('profile.php?action='.wp_create_nonce('google_authenticator_remove_secret'));
-			
+
 			// if ( isset($_GET['wp_http_referer']) ) {
 			// 	$url = $url . '&wp_http_referer=' . $_GET['wp_http_referer']; 
 			// }
-			
+
 			echo "<a href=\"".$url."\" class=\"button btn-ga-action inline\">".__('Reset 2-FA Secret','google-authenticator')."</a>";
 		} else {
 			echo "Not Active";
@@ -569,7 +569,7 @@ class GoogleAuthenticator {
 			echo "<input type=\"checkbox\" name=\"GA_relaxedmode\" id=\"GA_relaxedmode\" class=\"tog\"" . checked( $GA_relaxedmode, 'enabled', false ) . "/><span class=\"description\">".__(' Relaxed mode allows for more time drifting on your phone clock (&#177;2 min).','google-authenticator')."</span>\n";
 			echo "</td>\n";
 			echo "</tr>\n";
-			
+
 			echo "<tr>\n";
 			echo "<th><label for=\"GA_description\">".__('Description','google-authenticator')."</label></th>\n";
 			echo "<td><input name=\"GA_description\" id=\"GA_description\" value=\"{$GA_description}\"  type=\"text\" size=\"25\" /><span class=\"description\">".__(' Description that you\'ll see in the 2-factor authentication or 2-step verification app on your phone.','google-authenticator')."</span><br /></td>\n";
@@ -584,7 +584,7 @@ class GoogleAuthenticator {
 				echo "<input name=\"GA_secret\" id=\"GA_secret\" value=\"{$GA_secret}\" readonly=\"readonly\" type=\"text\" size=\"25\" />";
 				// echo "<input name=\"GA_newsecret\" id=\"GA_newsecret\" value=\"".__("Create new secret",'google-authenticator')."\" type=\"button\" class=\"button\" />";
 				echo "<input name=\"show_qr\" id=\"show_qr\" value=\"".__("Show/Hide QR code",'google-authenticator')."\" type=\"button\" class=\"button\" onclick=\"ShowOrHideQRCode();\" />";
-				
+
 				echo "<div id=\"GA_QR_INFO\" style=\"display: none\" >";
 				echo "\t<ol class='auth_message'>\n";
 				echo "\t<li>".__('Download authy / other 2-Factor Authentication or 2-Step Verification App on your android or iphone.','google-authenticator')."</li>\n";
@@ -597,7 +597,7 @@ class GoogleAuthenticator {
 
 				echo "<div id=\"GA_QRCODE\"/></div>";
 				echo '<span class="description"><br/> ' . __( 'Scan this with the 2-factor authentication or 2-step verification app.', 'google-authenticator' ) . '</span>';
-				
+
 				echo "<br><br>";
 				echo "<div class=\"input_OTP\">";
 				echo "<label for=\"googleotp\">".__('Authentication Code','google-authenticator')."</label>\n";
@@ -633,7 +633,7 @@ class GoogleAuthenticator {
 				echo "<div id=\"GA_QRCODE\"/></div>";
 				echo "<input type=\"hidden\" name=\"GA_secret\" id=\"GA_secret\" value=\"{$GA_secret}\" />";
 				echo '<span class="description"><br/> ' . __( 'Scan this with the 2-factor authentication or 2-step verification app.', 'google-authenticator' ) . '</span>';
-				
+
 				echo "<br><br>";
 				echo "<div class=\"input_OTP\">";
 				echo "<label for=\"googleotp\">".__('Authentication Code','google-authenticator')."</label>\n";
@@ -659,14 +659,14 @@ class GoogleAuthenticator {
 					echo "<input type=\"hidden\" name=\"GA_pwdenabled\" id=\"GA_pwdenabled\" value=\"0\">";
 				}
 				echo "<a href=\"#\" class=\"button btn-ga-action inline\" id=\"GA_APP_PASSWORD\">Create New Password</a>";
-				
+
 				// echo "<a href=\"#\" class=\"button btn-ga-action inline\" id=\"GA_GENERATE_APP_PASSWORD\">Create New Password</a>";
 				// echo "<a href=\"#\" class=\"button btn-ga-action inline\" id=\"GA_DEACTIVE_APP_PASSWORD\">Deactive</a>";
 
 				// echo "<input type=\"checkbox\" name=\"GA_pwdenabled\" id=\"GA_pwdenabled\" class=\"tog\"" . checked( $GA_pwdenabled, 'enabled', false ) . "/><span class=\"description\">".__(' Enabling an App password will decrease your overall login security.','google-authenticator')."</span>\n";
 				echo "</td>\n";
 				echo "</tr>\n";
-				
+
 				echo "<tr id=\"GA_PASSWORD_BOX\">\n";
 				echo "<th></th>\n";
 				echo "<td>\n";
@@ -741,7 +741,7 @@ class GoogleAuthenticator {
 				}
 			});
 		});
-		
+
 		jQuery('#GA_enabled').bind('change',function() {
 			GoogleAuthenticator_apppasswordcontrol();
 		});
@@ -759,7 +759,7 @@ class GoogleAuthenticator {
 			jQuery('#GA_passworddesc').hide();
 			GoogleAuthenticator_apppasswordcontrol();
 		});
-		
+
 		function GoogleAuthenticator_apppasswordcontrol() {
 			if ( jQuery('#GA_enabled').length > 0 ) {
 				if ( jQuery('#GA_enabled').is(':checked') ) {
@@ -815,7 +815,7 @@ ENDOFJS;
 		if ( !isset($_POST['GA_nonce']) || !wp_verify_nonce( @$_POST['GA_nonce'], 'google-authenticator' ) ) {
 			return;
 		}
-		
+
 		// If editing of 2-Factor Authentication settings has been disabled, just return
 		$GA_hidefromuser = trim( get_user_option( 'googleauthenticator_hidefromuser', $user_id ) );
 		if ( $GA_hidefromuser == 'enabled') return;
@@ -826,20 +826,20 @@ ENDOFJS;
 		$GA_secret		= isset($_POST['GA_secret']) ? trim( $_POST['GA_secret'] ) : '';
 		$GA_pwdenabled	= isset($_POST['GA_pwdenabled']) ? 'enabled' : 'disabled';
 		$GA_password	= isset($_POST['GA_password']) ? str_replace(' ', '', trim($_POST['GA_password'])) : '';
-		
+
 		$forced_roles = get_option( 'google_authenticator_roles', array() );
 
 		if ( array_intersect($user->roles, $forced_roles) ) { 
 			$GA_enabled = 'enabled';
 		}
-		
+
 		// Only store password if a new one has been generated.
 		/*if ( strtoupper($GA_password) != 'XXXXXXXXXXXXXXXX' ) {
 			// Store the password in a format that can be expanded easily later on if needed.
 			$GA_password = array( 'appname' => 'Default', 'password' => wp_hash_password( trim($GA_password) ) );
 			update_user_option( $user_id, 'googleauthenticator_passwords', json_encode( $GA_password ), true );
 		}*/
-		
+
 		update_user_option( $user_id, 'googleauthenticator_enabled', $GA_enabled, true );
 		// update_user_option( $user_id, 'googleauthenticator_description', $GA_description, true );
 		// update_user_option( $user_id, 'googleauthenticator_relaxedmode', $GA_relaxedmode, true );
@@ -857,10 +857,10 @@ ENDOFJS;
 		$user_id = $user->ID;
 
 		if ( isset($_GET['action']) && wp_verify_nonce(@$_GET['action'], 'google_authenticator_remove_secret') ) {
-			
+
 			delete_user_option($user_id, 'googleauthenticator_secret'); // blog spesific 
 			delete_user_option($user_id, 'googleauthenticator_secret', true); // global (network wide) 
-			
+
 			$redirect_to = add_query_arg( 
 				array( 
 					'user_id' => $user_id, 
@@ -882,9 +882,9 @@ ENDOFJS;
 
 			// return;
 		}
-		
+
 		$GA_hidefromuser = trim( get_user_option( 'googleauthenticator_hidefromuser', $user_id ) );
-		
+
 		echo "<h3>".__('2-Factor Authentication Settings','google-authenticator')."</h3>\n";
 		echo wp_nonce_field('google-authenticator', 'GA_nonce');
 		echo "<table class=\"form-table\">\n";
@@ -929,7 +929,7 @@ ENDOFJS;
 			echo "<td>\n";
 			
 			$url = admin_url('user-edit.php?user_id='.$user_id.'&action='.wp_create_nonce('google_authenticator_remove_secret'));
-			
+
 			// if ( isset($_GET['wp_http_referer']) ) {
 			// 	$url = $url . '&wp_http_referer=' . $_GET['wp_http_referer'];
 			// }
@@ -953,7 +953,7 @@ ENDOFJS;
 	 */
 	function edit_user_profile_update($user_id) {
 		$user = get_userdata($user_id);
-		
+
 		if ( !isset($_POST['GA_nonce']) || !wp_verify_nonce( @$_POST['GA_nonce'], 'google-authenticator' ) ) {
 			return;
 		}
@@ -979,7 +979,7 @@ ENDOFJS;
 			$GA_enabled = 'enabled';
 			// $GA_hidefromuser = 'disabled';
 		}
-		
+
 		update_user_option( $user_id, 'googleauthenticator_enabled', $GA_enabled, true );
 		// update_user_option( $user_id, 'googleauthenticator_hidefromuser', $GA_hidefromuser, true );
 	}
@@ -992,7 +992,7 @@ ENDOFJS;
 
 		// Some AJAX security.
 		check_ajax_referer( 'GoogleAuthenticatoraction', 'nonce' );
-		
+
 		// Create new secret.
 		$secret = $this->create_secret();
 
@@ -1039,7 +1039,7 @@ ENDOFJS;
 			if ( isset($_POST['GA_secret']) ) {
 				$GA_secret = $_POST['GA_secret'];
 			}
-			
+
 			// Get the verification code entered by the user trying to login
 			$otp = trim( $_POST['googleotp'] );
 
@@ -1123,14 +1123,14 @@ ENDOFJS;
 				'app_password' => implode(' ', str_split($secret, 4)) 
 			];
 		}
-		
+
 		wp_send_json_success($response);
 	}
 
 	function GoogleAuthenticator_generate_new_password_callback() {
 		// Some AJAX security.
 		check_ajax_referer( 'GoogleAuthenticatoraction', 'nonce' );
-		
+
 		// get serialize form and parse it to array
 		parse_str($_POST['dataForm'], $data);
 
@@ -1147,7 +1147,7 @@ ENDOFJS;
 			];
 			wp_send_json_success($response);
 		}
-		
+
 		// Create new secret.
 		$secret = $this->create_secret();
 
@@ -1165,7 +1165,7 @@ ENDOFJS;
 		];
 
 		header( 'Content-Type: application/json' );
-		
+
 		wp_send_json_success($response);
 	}
 
@@ -1186,7 +1186,7 @@ ENDOFJS;
 			];
 			wp_send_json_success($response);
 		}
-		
+
 		$response = [];
 
 		// Create new secret.
@@ -1204,7 +1204,7 @@ ENDOFJS;
 			'plain_text' => $secret, 
 			'app_password' => implode(' ', str_split($secret, 4)) 
 		];
-		
+
 		wp_send_json_success($response);
 	}
 
@@ -1225,7 +1225,7 @@ ENDOFJS;
 			];
 			wp_send_json_success($response);
 		}
-		
+
 		$response = [];
 
 		update_user_option( $user_id, 'googleauthenticator_pwdenabled', 'disabled', true );
@@ -1282,7 +1282,7 @@ ENDOFJS;
 	 * Admin setting menu for enabling 2-FA per role basis
 	 */
 	function setting_menu() {
-		add_submenu_page( 'options-general.php', __('2-Factor Authentication','google-authenticator'), __('2-Factor Authentication','google-authenticator'), 'manage_options', 'wordpress-2fa', array( $this, 'setting_menu_callback' )  );
+		add_submenu_page( 'options-general.php', __( '2-Factor Authentication', 'google-authenticator' ), __( '2-Factor Authentication', 'google-authenticator' ), 'manage_options', 'wordpress-2fa', array( $this, 'setting_menu_callback' )  );
 	}
 
 	/**
@@ -1333,7 +1333,9 @@ ENDOFJS;
 
 		?>
 		<div class="wrap">
-			<h1><?php _e('2-Factor Authentication Settings'); ?></h1>
+			<h1 class="wp-heading-inline"><?php _e( '2-Factor Authentication Settings', 'google-authenticator' ); ?></h1>
+			<hr class="wp-header-end">
+
 			<form action="" method="post">
 				<h3><?php _e( 'Force 2-FA on Following Roles', 'google-authenticator' ) ?></h3>
 				<table class="form-table">
@@ -1406,7 +1408,7 @@ ENDOFJS;
 		$GA_description = isset($_POST['GA_description']) ? trim( sanitize_text_field($_POST['GA_description']) ) : '';
 		$GA_relaxedmode = isset($_POST['GA_relaxedmode']) ? 'enabled' : 'disabled';
 		$GA_pwdenabled = isset($_POST['GA_pwdenabled']) ? 'enabled' : 'disabled';
-		
+
 		update_option( 'google_authenticator_roles', $GA_roles, 'no' );
 		update_option( 'google_authenticator_description', $GA_description, 'no' );
 		update_option( 'google_authenticator_relaxedmode', $GA_relaxedmode, 'no' );
